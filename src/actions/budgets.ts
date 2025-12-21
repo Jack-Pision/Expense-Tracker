@@ -27,7 +27,7 @@ export async function getBudgets() {
     }
 }
 
-export async function addBudget(data: Omit<NewBudget, "id" | "userId" | "createdAt">) {
+export async function addBudget(data: Omit<NewBudget, "id" | "userId" | "createdAt" | "amount"> & { amount: number }) {
     try {
         const user = await getAuthUser();
         if (!user) return { success: false, error: "Unauthorized" };

@@ -35,7 +35,7 @@ export async function getTransactions() {
     }
 }
 
-export async function addTransaction(data: Omit<NewTransaction, "id" | "userId" | "createdAt">) {
+export async function addTransaction(data: Omit<NewTransaction, "id" | "userId" | "createdAt" | "amount"> & { amount: number }) {
     try {
         const user = await getAuthUser();
         if (!user) return { success: false, error: "Unauthorized" };
@@ -76,7 +76,7 @@ export async function deleteTransaction(id: string) {
     }
 }
 
-export async function editTransaction(id: string, data: Partial<Omit<NewTransaction, "id" | "userId" | "createdAt">>) {
+export async function editTransaction(id: string, data: Partial<Omit<NewTransaction, "id" | "userId" | "createdAt" | "amount">> & { amount?: number }) {
     try {
         const user = await getAuthUser();
         if (!user) return { success: false, error: "Unauthorized" };
