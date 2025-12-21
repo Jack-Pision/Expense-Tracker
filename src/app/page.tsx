@@ -7,6 +7,8 @@ import { CreditCard, TrendingUp, Calendar, Repeat, Filter, Download } from "luci
 import { getTransactions, getBalanceStats } from "@/actions/transactions";
 import { getBudgets } from "@/actions/budgets";
 
+export const dynamic = "force-dynamic";
+
 export default async function Dashboard() {
   const [{ data: transactions }, { data: stats }, { data: budgets }] = await Promise.all([
     getTransactions(),

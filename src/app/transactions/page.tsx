@@ -8,6 +8,8 @@ import {
 import { getTransactions } from "@/actions/transactions";
 import { TransactionList } from "@/components/transactions/TransactionList";
 
+export const dynamic = "force-dynamic";
+
 export default async function TransactionsPage() {
     const { data: transactions } = await getTransactions();
     const filteredTransactions = transactions || [];

@@ -11,6 +11,8 @@ import {
 } from "lucide-react";
 import { getBalanceStats } from "@/actions/transactions";
 
+export const dynamic = "force-dynamic";
+
 export default async function AnalyticsPage() {
     const { data: stats } = await getBalanceStats();
 
