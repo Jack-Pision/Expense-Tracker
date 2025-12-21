@@ -56,6 +56,17 @@ export function AppShell({ children }: AppShellProps) {
         openAddTransaction: () => setAddModalOpen(true),
     };
 
+    // Check if we are on an auth page
+    const isAuthPage = pathname?.startsWith("/login") || pathname?.startsWith("/signup") || pathname?.startsWith("/auth");
+
+    if (isAuthPage) {
+        return (
+            <ModalContext.Provider value={modalContext}>
+                {children}
+            </ModalContext.Provider>
+        );
+    }
+
     return (
         <ModalContext.Provider value={modalContext}>
             <div className="min-h-screen bg-background">
