@@ -2,7 +2,7 @@
 
 import { signup } from "@/app/auth/actions";
 import { Card } from "@/components/ui/Card";
-import { Button } from "@/components/ui/Button";
+import { SubmitButton } from "@/components/auth/SubmitButton";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 
@@ -52,9 +52,9 @@ function SignupForm() {
                         className="w-full px-4 py-3 bg-white border border-border rounded-xl focus:ring-2 focus:ring-primary-500 outline-none transition-all"
                     />
                 </div>
-                <Button type="submit" fullWidth className="h-12 text-lg">
+                <SubmitButton fullWidth>
                     Sign Up
-                </Button>
+                </SubmitButton>
             </form>
 
             <div className="text-center text-sm text-text-tertiary">
