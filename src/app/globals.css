@@ -1,26 +1,133 @@
 @import "tailwindcss";
 
+/* ================================================
+   EXPENSE TRACKER 2025 - NeonGlass 2.0 Refinement
+   ================================================ */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Premium Dark Palette */
+  --deep-space: #050505;
+  /* Deeper Black */
+  --midnight: #0B0B1E;
+  /* Deep Indigo */
+  --slate: #16162D;
+  /* Lighter Slate */
+
+  /* High-Vibrancy Accent Colors */
+  --accent-orange: #FF8C00;
+  --accent-pink: #EC4899;
+  --accent-indigo: #6366F1;
+  --accent-purple: #8B5CF6;
+  --accent-emerald: #10B981;
+  --accent-amber: #F59E0B;
+
+  /* Gradient Palette */
+  --grad-primary: linear-gradient(135deg, #FF8C00 0%, #EC4899 100%);
+  --grad-secondary: linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%);
+
+  /* Text Colors */
+  --text-primary: #FFFFFF;
+  --text-secondary: #A0A0B8;
+  --text-tertiary: #64647F;
+
+  /* Refined Glass Effect 2.0 */
+  --glass-bg: rgba(11, 11, 30, 0.4);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-blur: 24px;
+
+  /* Shadows & Glows */
+  --shadow-glow-orange: 0 0 20px rgba(255, 140, 0, 0.2);
+  --shadow-glow-indigo: 0 0 20px rgba(99, 102, 241, 0.2);
+  --shadow-premium: 0 20px 40px rgba(0, 0, 0, 0.4);
+
+  /* Background */
+  --background: var(--deep-space);
+  --foreground: var(--text-primary);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+@theme {
+  /* Usage: className="text-primary-600" */
+  --color-primary-50: #eff6ff;
+  --color-primary-100: #dbeafe;
+  --color-primary-200: #bfdbfe;
+  --color-primary-300: #93c5fd;
+  --color-primary-400: #60a5fa;
+  --color-primary-500: #3b82f6;
+  --color-primary-600: #2563eb;
+  --color-primary-700: #1d4ed8;
+  --color-primary-800: #1e40af;
+  --color-primary-900: #1e3a8a;
+  --color-primary-950: #172554;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  /* Usage: className="bg-background text-foreground" */
+  --color-background: #f8fafc;
+  /* Slate 50 */
+  --color-foreground: #0f172a;
+  /* Slate 900 */
+
+  --color-surface: #ffffff;
+  --color-surface-hover: #f1f5f9;
+  /* Slate 100 */
+
+  --color-border: #e2e8f0;
+  /* Slate 200 */
+  --color-input: #e2e8f0;
+
+  --color-text-primary: #0f172a;
+  /* Slate 900 */
+  --color-text-secondary: #64748b;
+  /* Slate 500 */
+  --color-text-tertiary: #94a3b8;
+  /* Slate 400 */
+
+  /* Semantic Colors */
+  --color-success: #10b981;
+  /* Emerald 500 */
+  --color-warning: #f59e0b;
+  /* Amber 500 */
+  --color-danger: #ef4444;
+  /* Red 500 */
+
+  /* Animations */
+  --animate-fade-in: fade-in 0.3s ease-out;
+  --animate-slide-up: slide-up 0.4s ease-out;
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes slide-up {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* Custom Utilities */
+@utility container-wrapper {
+  max-width: 1280px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+@layer base {
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    @apply antialiased font-sans;
+  }
 }
