@@ -6,6 +6,8 @@ import { User, Bell, Shield, Moon, LogOut, ChevronRight, Banknote } from "lucide
 import { useCurrency, CURRENCIES, CurrencyCode } from "@/context/CurrencyContext";
 import { logout } from "@/app/auth/actions";
 
+export const dynamic = "force-dynamic";
+
 export default function SettingsPage() {
     const { currency, setCurrency } = useCurrency();
     return (

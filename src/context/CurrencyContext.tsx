@@ -73,9 +73,8 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
     // For a simple app, rendering children immediately with default is fine, 
     // but useEffect causing a re-render is standard.
 
-    if (!isLoaded) {
-        return <>{children}</>; // Render with default (USD) to avoid blockage, acts as SS fallback
-    }
+    // Standard pattern: Render with default (USD) for SSR, then update on client
+    // We remove the conditional return to ensure Context is always available
 
     return (
         <CurrencyContext.Provider value={{ currency, setCurrency, formatMoney }}>
