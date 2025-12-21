@@ -64,9 +64,9 @@ export default async function Dashboard() {
       </div>
 
       {/* Main Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
 
-        {/* Balance Card - Spans 2 columns on large screens */}
+        {/* Balance Card - Spans 2 columns on large screens, full on mobile/tablet */}
         <BalanceCard
           balance={balance}
           income={totalIncome}
@@ -92,14 +92,15 @@ export default async function Dashboard() {
         />
 
         {/* Spending Breakdown */}
-        <div className="lg:col-span-2">
+        <div className="col-span-full md:col-span-2 lg:col-span-2">
           <SpendingBreakdown categories={categories} />
         </div>
 
         {/* More Stats */}
         <StatCard
           title="This Month"
-          value={`$${totalExpenses.toFixed(0)}`}
+          value={totalExpenses}
+          isMoney
           change={`${budgets && budgets.length > 0 ? "vs Budget" : "Total Spent"}`}
           changeType="neutral"
           icon={<Calendar className="h-5 w-5" />}

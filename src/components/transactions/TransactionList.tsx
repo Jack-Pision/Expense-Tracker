@@ -58,9 +58,13 @@ const categoryColors: any = {
     other: "bg-slate-50 text-slate-600",
 };
 
+import { useCurrency } from "@/context/CurrencyContext";
+// ... imports
+
 export function TransactionList({ transactions }: TransactionListProps) {
     const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
     const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+    const { formatMoney } = useCurrency();
 
     const handleDelete = async (id: string) => {
         if (confirm("Are you sure you want to delete this transaction?")) {
@@ -74,7 +78,6 @@ export function TransactionList({ transactions }: TransactionListProps) {
         setOpenMenuId(null);
     };
 
-    // Cast specific string type to union for modal
     const getInitialDataForModal = (tx: Transaction) => ({
         ...tx,
         type: tx.type as "income" | "expense",
@@ -85,6 +88,7 @@ export function TransactionList({ transactions }: TransactionListProps) {
             <Card>
                 <div className="overflow-x-auto min-h-[400px]">
                     <table className="w-full text-left border-collapse">
+                        {/* thead ... */}
                         <thead>
                             <tr className="border-b border-border text-xs uppercase tracking-wider text-text-secondary font-semibold">
                                 <th className="p-4">Transaction</th>
@@ -122,7 +126,7 @@ export function TransactionList({ transactions }: TransactionListProps) {
                                             </span>
                                         </td>
                                         <td className={`p-4 text-right font-bold ${isIncome ? "text-emerald-600" : "text-text-primary"}`}>
-                                            {isIncome ? "+" : ""}{tx.amount.toLocaleString("en-US", { style: "currency", currency: "USD" })}
+                                            {isIncome ? "+" : ""}{formatMoney(tx.amount)}
                                         </td>
                                         <td className="p-4 relative">
                                             <button

@@ -65,10 +65,16 @@ interface RecentTransactionsProps {
     title?: string;
 }
 
+import { useCurrency } from "@/context/CurrencyContext";
+
+// ... existing imports
+
 export function RecentTransactions({
     transactions,
     title = "Recent Transactions",
 }: RecentTransactionsProps) {
+    const { formatMoney } = useCurrency();
+
     return (
         <Card className="col-span-full">
             <div className="flex items-center justify-between mb-6">
@@ -123,7 +129,7 @@ export function RecentTransactions({
                                             <ArrowDownRight className="h-4 w-4 text-text-tertiary" />
                                         )}
                                         <span className="text-base">
-                                            {isIncome ? "+" : "-"}${Math.abs(tx.amount).toLocaleString()}
+                                            {isIncome ? "+" : ""}{formatMoney(Math.abs(tx.amount))}
                                         </span>
                                     </div>
                                     <span className="text-[10px] text-text-tertiary uppercase tracking-widest">

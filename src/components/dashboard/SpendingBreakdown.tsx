@@ -1,5 +1,6 @@
 "use client";
 
+import { useCurrency } from "@/context/CurrencyContext";
 import { Card } from "../ui/Card";
 import { motion } from "framer-motion";
 
@@ -15,6 +16,7 @@ interface SpendingBreakdownProps {
 }
 
 export function SpendingBreakdown({ categories }: SpendingBreakdownProps) {
+    const { formatMoney } = useCurrency();
     const totalSpent = categories.reduce((sum, cat) => sum + cat.amount, 0);
 
     return (
@@ -35,7 +37,7 @@ export function SpendingBreakdown({ categories }: SpendingBreakdownProps) {
                             <div className="flex items-center justify-between">
                                 <span className="text-sm font-medium text-text-primary">{category.name}</span>
                                 <span className={`text-sm font-medium ${isOverBudget ? "text-red-600" : "text-text-secondary"}`}>
-                                    ${category.amount.toLocaleString()} <span className="text-text-tertiary">/ ${category.budget.toLocaleString()}</span>
+                                    {formatMoney(category.amount)} <span className="text-text-tertiary">/ {formatMoney(category.budget)}</span>
                                 </span>
                             </div>
 
@@ -63,7 +65,7 @@ export function SpendingBreakdown({ categories }: SpendingBreakdownProps) {
                 <div className="flex items-center justify-between">
                     <span className="text-sm font-medium text-text-secondary">Monthly Total</span>
                     <span className="text-xl font-bold text-text-primary">
-                        ${totalSpent.toLocaleString()}
+                        {formatMoney(totalSpent)}
                     </span>
                 </div>
             </div>

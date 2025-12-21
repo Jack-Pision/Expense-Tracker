@@ -1,15 +1,17 @@
 "use client";
 
+import { useCurrency } from "@/context/CurrencyContext";
 import { Card } from "../ui/Card";
 import { ArrowUpRight, ArrowDownRight } from "lucide-react";
 
 interface StatCardProps {
     title: string;
-    value: string;
+    value: string | number; // Accept number for auto-formatting
     change?: string;
     changeType?: "positive" | "negative" | "neutral";
     icon: React.ReactNode;
     iconColor?: string;
+    isMoney?: boolean; // Explicit flag
 }
 
 export function StatCard({
@@ -19,12 +21,16 @@ export function StatCard({
     changeType = "neutral",
     icon,
     iconColor = "text-primary-600",
+    isMoney = false,
 }: StatCardProps) {
+    const { formatMoney } = useCurrency();
     const changeColors = {
         positive: "text-emerald-600",
         negative: "text-red-600",
         neutral: "text-text-tertiary",
     };
+
+    const displayValue = isMoney && typeof value === 'number' ? formatMoney(value) : value;
 
     return (
         <Card className="hover:shadow-md transition-shadow">
@@ -33,7 +39,7 @@ export function StatCard({
                     <p className="text-xs font-bold text-text-secondary uppercase tracking-wider">
                         {title}
                     </p>
-                    <p className="text-2xl font-bold text-text-primary tracking-tight">{value}</p>
+                    <p className="text-2xl font-bold text-text-primary tracking-tight">{displayValue}</p>
                     {change && (
                         <div className={`flex items-center gap-1 text-xs font-medium ${changeColors[changeType]}`}>
                             {changeType === "positive" ? <ArrowUpRight className="h-3 w-3" /> : changeType === "negative" ? <ArrowDownRight className="h-3 w-3" /> : null}

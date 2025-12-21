@@ -1,23 +1,25 @@
-import { sqliteTable, text, real, integer } from "drizzle-orm/sqlite-core";
+import { pgTable, text, numeric, timestamp, uuid } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 
-export const transactions = sqliteTable("transactions", {
-    id: text("id").primaryKey(), // We will generate UUIDs in the app or DB
+export const transactions = pgTable("transactions", {
+    id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+    userId: uuid("user_id").notNull(), // Links to Supabase Auth User
     description: text("description").notNull(),
-    amount: real("amount").notNull(), // using real for float values
+    amount: numeric("amount", { precision: 12, scale: 2 }).notNull(),
     date: text("date").notNull(),
     category: text("category").notNull(),
     type: text("type").notNull(), // 'income' | 'expense'
-    createdAt: text("created_at").default(sql`CURRENT_TIMESTAMP`),
+    createdAt: timestamp("created_at").defaultNow(),
 });
 
-export const budgets = sqliteTable("budgets", {
-    id: text("id").primaryKey(),
+export const budgets = pgTable("budgets", {
+    id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+    userId: uuid("user_id").notNull(),
     category: text("category").notNull(),
-    amount: real("amount").notNull(), // The budget limit
+    amount: numeric("amount", { precision: 12, scale: 2 }).notNull(),
     period: text("period").default("monthly"), // monthly, yearly
     color: text("color").default("bg-blue-500"),
-    createdAt: text("created_at").default(sql`CURRENT_TIMESTAMP`),
+    createdAt: timestamp("created_at").defaultNow(),
 });
 
 export type Transaction = typeof transactions.$inferSelect;

@@ -19,7 +19,8 @@ export function AnimatedCounter({
     duration = 1.5,
     className = "",
     decimals = 2,
-}: AnimatedCounterProps) {
+    locale = "en-US",
+}: AnimatedCounterProps & { locale?: string }) {
     const prevValue = useRef(0);
 
     const spring = useSpring(prevValue.current, {
@@ -30,7 +31,7 @@ export function AnimatedCounter({
     });
 
     const display = useTransform(spring, (current) =>
-        current.toLocaleString("en-US", {
+        current.toLocaleString(locale, {
             minimumFractionDigits: decimals,
             maximumFractionDigits: decimals,
         })

@@ -12,8 +12,13 @@ interface BudgetListProps {
     initialBudgets: any[];
 }
 
+import { useCurrency } from "@/context/CurrencyContext";
+
+// ... existing imports
+
 export default function BudgetList({ initialBudgets }: BudgetListProps) {
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const { formatMoney } = useCurrency();
 
     return (
         <div className="space-y-8">
@@ -27,7 +32,7 @@ export default function BudgetList({ initialBudgets }: BudgetListProps) {
                 </Button>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {initialBudgets.map((item) => {
                     const percentage = Math.min((item.spent / item.total) * 100, 100);
                     const isOver = item.spent > item.total;
@@ -63,10 +68,10 @@ export default function BudgetList({ initialBudgets }: BudgetListProps) {
                                     </div>
                                     <div className="text-right mt-6 sm:mt-0 pr-8">
                                         <p className="text-xl font-bold text-text-primary">
-                                            ${item.spent.toLocaleString()} <span className="text-base text-text-tertiary font-normal">/ ${item.total.toLocaleString()}</span>
+                                            {formatMoney(item.spent)} <span className="text-base text-text-tertiary font-normal">/ {formatMoney(item.total)}</span>
                                         </p>
                                         <p className={`text-xs font-bold ${isOver ? "text-red-600" : "text-emerald-600"}`}>
-                                            {isOver ? `$${(item.spent - item.total).toLocaleString()} over` : `$${(item.total - item.spent).toLocaleString()} remaining`}
+                                            {isOver ? `${formatMoney(item.spent - item.total)} over` : `${formatMoney(item.total - item.spent)} remaining`}
                                         </p>
                                     </div>
                                 </div>

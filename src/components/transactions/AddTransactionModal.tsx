@@ -177,15 +177,15 @@ export function AddTransactionModal({ isOpen, onClose, onSubmit, initialData }: 
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm"
+                    className="fixed inset-0 z-[100] flex items-end md:items-center justify-center sm:p-4 bg-slate-900/50 backdrop-blur-sm"
                     onClick={resetAndClose}
                 >
                     <motion.div
-                        initial={{ opacity: 0, scale: 0.95, y: 20 }}
-                        animate={{ opacity: 1, scale: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                        initial={{ opacity: 0, y: 100 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 100 }}
                         transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                        className="relative w-full max-w-lg bg-surface rounded-xl shadow-2xl overflow-hidden"
+                        className="relative w-full h-[95vh] md:h-auto md:max-w-lg bg-surface md:rounded-xl rounded-t-2xl shadow-2xl overflow-hidden flex flex-col"
                         onClick={(e) => e.stopPropagation()}
                     >
                         {/* Header */}
@@ -217,7 +217,7 @@ export function AddTransactionModal({ isOpen, onClose, onSubmit, initialData }: 
                         </div>
 
                         {/* Step Content */}
-                        <div className="p-6 min-h-[300px]">
+                        <div className="p-6 min-h-[300px] flex-1 overflow-y-auto">
                             <AnimatePresence mode="wait">
                                 {/* Step 1: Amount & Type */}
                                 {step === 1 && (

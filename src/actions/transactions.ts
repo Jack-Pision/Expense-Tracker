@@ -3,24 +3,49 @@
 import { db } from "@/db";
 import { transactions, type NewTransaction } from "@/db/schema";
 import { revalidatePath } from "next/cache";
-import { desc, eq, sql } from "drizzle-orm";
+import { desc, eq, and } from "drizzle-orm";
+import { createClient } from "@/utils/supabase/server";
+
+async function getAuthUser() {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    return user;
+}
 
 export async function getTransactions() {
     try {
-        const data = await db.select().from(transactions).orderBy(desc(transactions.date));
-        return { success: true, data };
+        const user = await getAuthUser();
+        if (!user) return { success: false, error: "Unauthorized" };
+
+        const data = await db.select()
+            .from(transactions)
+            .where(eq(transactions.userId, user.id))
+            .orderBy(desc(transactions.date));
+
+        // Convert numeric strings back to numbers if needed
+        const formattedData = data.map(tx => ({
+            ...tx,
+            amount: Number(tx.amount)
+        }));
+
+        return { success: true, data: formattedData };
     } catch (error) {
         console.error("Failed to fetch transactions:", error);
         return { success: false, error: "Failed to fetch transactions" };
     }
 }
 
-export async function addTransaction(data: Omit<NewTransaction, "id" | "createdAt">) {
+export async function addTransaction(data: Omit<NewTransaction, "id" | "userId" | "createdAt">) {
     try {
+        const user = await getAuthUser();
+        if (!user) return { success: false, error: "Unauthorized" };
+
         await db.insert(transactions).values({
-            id: crypto.randomUUID(),
+            userId: user.id,
             ...data,
-        });
+            amount: data.amount.toString(), // numeric requires string in some drivers
+        } as any);
+
         revalidatePath("/transactions");
         revalidatePath("/");
         return { success: true };
@@ -32,7 +57,16 @@ export async function addTransaction(data: Omit<NewTransaction, "id" | "createdA
 
 export async function deleteTransaction(id: string) {
     try {
-        await db.delete(transactions).where(eq(transactions.id, id));
+        const user = await getAuthUser();
+        if (!user) return { success: false, error: "Unauthorized" };
+
+        await db.delete(transactions).where(
+            and(
+                eq(transactions.id, id),
+                eq(transactions.userId, user.id)
+            )
+        );
+
         revalidatePath("/transactions");
         revalidatePath("/");
         return { success: true };
@@ -42,11 +76,23 @@ export async function deleteTransaction(id: string) {
     }
 }
 
-export async function editTransaction(id: string, data: Partial<Omit<NewTransaction, "id" | "createdAt">>) {
+export async function editTransaction(id: string, data: Partial<Omit<NewTransaction, "id" | "userId" | "createdAt">>) {
     try {
+        const user = await getAuthUser();
+        if (!user) return { success: false, error: "Unauthorized" };
+
+        const updateData: any = { ...data };
+        if (data.amount) updateData.amount = data.amount.toString();
+
         await db.update(transactions)
-            .set(data)
-            .where(eq(transactions.id, id));
+            .set(updateData)
+            .where(
+                and(
+                    eq(transactions.id, id),
+                    eq(transactions.userId, user.id)
+                )
+            );
+
         revalidatePath("/transactions");
         revalidatePath("/");
         return { success: true };
@@ -58,15 +104,18 @@ export async function editTransaction(id: string, data: Partial<Omit<NewTransact
 
 export async function getBalanceStats() {
     try {
-        const allTx = await db.select().from(transactions);
+        const user = await getAuthUser();
+        if (!user) return { success: false, error: "Unauthorized" };
+
+        const allTx = await db.select().from(transactions).where(eq(transactions.userId, user.id));
 
         const income = allTx
             .filter((t) => t.type === "income")
-            .reduce((sum, t) => sum + t.amount, 0);
+            .reduce((sum, t) => sum + Number(t.amount), 0);
 
         const expenses = allTx
             .filter((t) => t.type === "expense")
-            .reduce((sum, t) => sum + t.amount, 0);
+            .reduce((sum, t) => sum + Number(t.amount), 0);
 
         return {
             success: true,

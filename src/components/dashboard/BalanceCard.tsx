@@ -4,19 +4,20 @@ import { Card } from "../ui/Card";
 import { AnimatedCounter } from "../ui/AnimatedCounter";
 import { TrendingUp, TrendingDown, Wallet, ArrowUpRight, ArrowDownRight } from "lucide-react";
 
+import { useCurrency } from "@/context/CurrencyContext";
+
 interface BalanceCardProps {
     balance: number;
     income: number;
     expenses: number;
-    currency?: string;
 }
 
 export function BalanceCard({
     balance,
     income,
     expenses,
-    currency = "$",
 }: BalanceCardProps) {
+    const { currency } = useCurrency();
     const percentChange = income > 0 ? ((income - expenses) / income) * 100 : 0;
     const isPositive = percentChange >= 0;
 
@@ -29,7 +30,7 @@ export function BalanceCard({
                 </div>
 
                 <div className="text-6xl lg:text-7xl font-extrabold tracking-tight text-text-primary">
-                    <AnimatedCounter value={balance} prefix={currency} />
+                    <AnimatedCounter value={balance} prefix={currency.symbol} locale={currency.locale} />
                 </div>
 
                 <div
@@ -56,7 +57,7 @@ export function BalanceCard({
                     <div>
                         <p className="text-xs text-text-tertiary font-bold uppercase tracking-wider">Income</p>
                         <p className="text-lg font-bold text-text-primary">
-                            <AnimatedCounter value={income} prefix={currency} />
+                            <AnimatedCounter value={income} prefix={currency.symbol} locale={currency.locale} />
                         </p>
                     </div>
                 </div>
@@ -69,7 +70,7 @@ export function BalanceCard({
                     <div>
                         <p className="text-xs text-text-tertiary font-bold uppercase tracking-wider">Expenses</p>
                         <p className="text-lg font-bold text-text-primary">
-                            <AnimatedCounter value={expenses} prefix={currency} />
+                            <AnimatedCounter value={expenses} prefix={currency.symbol} locale={currency.locale} />
                         </p>
                     </div>
                 </div>
