@@ -30,14 +30,19 @@ export async function signup(formData: FormData) {
         password: formData.get("password") as string,
     };
 
-    const { error } = await supabase.auth.signUp(data);
+    const { data: { session }, error } = await supabase.auth.signUp(data);
 
     if (error) {
         return redirect("/signup?error=" + encodeURIComponent(error.message));
     }
 
     revalidatePath("/", "layout");
-    redirect("/login?message=Check your email to continue.");
+
+    if (session) {
+        redirect("/");
+    } else {
+        redirect("/login?message=Check your email to continue.");
+    }
 }
 
 export async function logout() {
