@@ -40,3 +40,15 @@ Yes, adding the environment variables in Vercel is the primary step!
 2.  **Supabase Auth Redirects**: (CRITICAL) In the Supabase Dashboard, go to **Authentication -> URL Configuration**.
     *   **Site URL**: Set this to your Vercel URL (e.g., `https://your-app.vercel.app`).
     *   **Redirect URLs**: Add `https://your-app.vercel.app/**` to allow redirects back to your site after login.
+
+### 6. Disable Email Verification (CRITICAL FIX)
+To allow users to login immediately without clicking an email link:
+
+1.  Go to your **Supabase Dashboard**.
+2.  In the left sidebar, click **Authentication** (the people icon).
+3.  Under **Configuration**, click **Providers**.
+4.  Click on **Email** to expand the settings.
+5.  **Toggle OFF** the switch that says **"Confirm email"**.
+6.  Click **Save**.
+
+Once this is disabled, new clean signups will be logged in instantly!
