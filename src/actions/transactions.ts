@@ -1,31 +1,41 @@
 "use server";
 
-import { db } from "@/db";
-import { transactions, type NewTransaction } from "@/db/schema";
 import { revalidatePath } from "next/cache";
-import { desc, eq, and } from "drizzle-orm";
 import { createClient } from "@/utils/supabase/server";
 
-async function getAuthUser() {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    return user;
+// Transaction type for the app
+interface TransactionData {
+    description: string;
+    amount: number;
+    date: string;
+    category: string;
+    type: "income" | "expense";
 }
 
 export async function getTransactions() {
     try {
-        const user = await getAuthUser();
+        const supabase = await createClient();
+        const { data: { user } } = await supabase.auth.getUser();
         if (!user) return { success: false, error: "Unauthorized" };
 
-        const data = await db.select()
-            .from(transactions)
-            .where(eq(transactions.userId, user.id))
-            .orderBy(desc(transactions.date));
+        const { data, error } = await supabase
+            .from("transactions")
+            .select("*")
+            .eq("user_id", user.id)
+            .order("date", { ascending: false });
 
-        // Convert numeric strings back to numbers if needed
-        const formattedData = data.map(tx => ({
-            ...tx,
-            amount: Number(tx.amount)
+        if (error) throw error;
+
+        // Map to expected format
+        const formattedData = (data || []).map(tx => ({
+            id: tx.id,
+            userId: tx.user_id,
+            description: tx.description,
+            amount: Number(tx.amount),
+            date: tx.date,
+            category: tx.category,
+            type: tx.type,
+            createdAt: tx.created_at,
         }));
 
         return { success: true, data: formattedData };
@@ -35,23 +45,24 @@ export async function getTransactions() {
     }
 }
 
-export async function addTransaction(data: Omit<NewTransaction, "id" | "userId" | "createdAt" | "amount"> & { amount: number }) {
+export async function addTransaction(data: TransactionData) {
     try {
-        const user = await getAuthUser();
+        const supabase = await createClient();
+        const { data: { user } } = await supabase.auth.getUser();
         if (!user) return { success: false, error: "Unauthorized" };
 
-        console.log("Adding transaction for user:", user.id, "Data:", data);
+        const { error } = await supabase
+            .from("transactions")
+            .insert({
+                user_id: user.id,
+                description: data.description,
+                amount: data.amount,
+                date: data.date,
+                category: data.category,
+                type: data.type,
+            });
 
-        const transactionData = {
-            userId: user.id,
-            description: data.description,
-            amount: data.amount.toString(), // numeric field expects string in Postgres/Drizzle
-            date: data.date,
-            category: data.category,
-            type: data.type,
-        };
-
-        await db.insert(transactions).values(transactionData);
+        if (error) throw error;
 
         revalidatePath("/transactions");
         revalidatePath("/");
@@ -59,28 +70,24 @@ export async function addTransaction(data: Omit<NewTransaction, "id" | "userId" 
         return { success: true };
     } catch (error) {
         console.error("Failed to add transaction:", error);
-        // Providing more descriptive error for RLS issues
         const errorMsg = error instanceof Error ? error.message : "Failed to add transaction";
-        return {
-            success: false,
-            error: errorMsg.includes("policy") || errorMsg.includes("permission")
-                ? "Database Permission Error: Please check RLS policies in Supabase."
-                : errorMsg
-        };
+        return { success: false, error: errorMsg };
     }
 }
 
 export async function deleteTransaction(id: string) {
     try {
-        const user = await getAuthUser();
+        const supabase = await createClient();
+        const { data: { user } } = await supabase.auth.getUser();
         if (!user) return { success: false, error: "Unauthorized" };
 
-        await db.delete(transactions).where(
-            and(
-                eq(transactions.id, id),
-                eq(transactions.userId, user.id)
-            )
-        );
+        const { error } = await supabase
+            .from("transactions")
+            .delete()
+            .eq("id", id)
+            .eq("user_id", user.id);
+
+        if (error) throw error;
 
         revalidatePath("/transactions");
         revalidatePath("/");
@@ -91,26 +98,26 @@ export async function deleteTransaction(id: string) {
     }
 }
 
-export async function editTransaction(id: string, data: Partial<Omit<NewTransaction, "id" | "userId" | "createdAt" | "amount">> & { amount?: number }) {
+export async function editTransaction(id: string, data: Partial<TransactionData>) {
     try {
-        const user = await getAuthUser();
+        const supabase = await createClient();
+        const { data: { user } } = await supabase.auth.getUser();
         if (!user) return { success: false, error: "Unauthorized" };
 
-        const updateData: any = {};
+        const updateData: Record<string, any> = {};
         if (data.description !== undefined) updateData.description = data.description;
-        if (data.amount !== undefined) updateData.amount = data.amount.toString();
+        if (data.amount !== undefined) updateData.amount = data.amount;
         if (data.date !== undefined) updateData.date = data.date;
         if (data.category !== undefined) updateData.category = data.category;
         if (data.type !== undefined) updateData.type = data.type;
 
-        await db.update(transactions)
-            .set(updateData)
-            .where(
-                and(
-                    eq(transactions.id, id),
-                    eq(transactions.userId, user.id)
-                )
-            );
+        const { error } = await supabase
+            .from("transactions")
+            .update(updateData)
+            .eq("id", id)
+            .eq("user_id", user.id);
+
+        if (error) throw error;
 
         revalidatePath("/transactions");
         revalidatePath("/");
@@ -123,18 +130,25 @@ export async function editTransaction(id: string, data: Partial<Omit<NewTransact
 
 export async function getBalanceStats() {
     try {
-        const user = await getAuthUser();
+        const supabase = await createClient();
+        const { data: { user } } = await supabase.auth.getUser();
         if (!user) return { success: false, error: "Unauthorized" };
 
-        const allTx = await db.select().from(transactions).where(eq(transactions.userId, user.id));
+        const { data, error } = await supabase
+            .from("transactions")
+            .select("amount, type")
+            .eq("user_id", user.id);
 
+        if (error) throw error;
+
+        const allTx = data || [];
         const income = allTx
             .filter((t) => t.type === "income")
             .reduce((sum, t) => sum + Number(t.amount), 0);
 
         const expenses = allTx
             .filter((t) => t.type === "expense")
-            .reduce((sum, t) => sum + Number(t.amount), 0);
+            .reduce((sum, t) => sum + Math.abs(Number(t.amount)), 0);
 
         return {
             success: true,
@@ -148,3 +162,4 @@ export async function getBalanceStats() {
         return { success: false, error: "Failed to fetch stats" };
     }
 }
+

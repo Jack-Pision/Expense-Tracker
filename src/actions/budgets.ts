@@ -1,24 +1,37 @@
 "use server";
 
-import { db } from "@/db";
-import { budgets, transactions, NewBudget } from "@/db/schema";
 import { revalidatePath } from "next/cache";
-import { eq, and } from "drizzle-orm";
 import { createClient } from "@/utils/supabase/server";
 
-async function getAuthUser() {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    return user;
+interface BudgetData {
+    category: string;
+    amount: number;
+    period?: string;
+    color?: string;
 }
 
 export async function getBudgets() {
     try {
-        const user = await getAuthUser();
+        const supabase = await createClient();
+        const { data: { user } } = await supabase.auth.getUser();
         if (!user) return { success: false, error: "Unauthorized" };
 
-        const allBudgets = await db.select().from(budgets).where(eq(budgets.userId, user.id));
-        const formattedBudgets = allBudgets.map(b => ({ ...b, amount: Number(b.amount) }));
+        const { data, error } = await supabase
+            .from("budgets")
+            .select("*")
+            .eq("user_id", user.id);
+
+        if (error) throw error;
+
+        const formattedBudgets = (data || []).map(b => ({
+            id: b.id,
+            userId: b.user_id,
+            category: b.category,
+            amount: Number(b.amount),
+            period: b.period,
+            color: b.color,
+            createdAt: b.created_at,
+        }));
 
         return { success: true, data: formattedBudgets };
     } catch (error) {
@@ -27,16 +40,23 @@ export async function getBudgets() {
     }
 }
 
-export async function addBudget(data: Omit<NewBudget, "id" | "userId" | "createdAt" | "amount"> & { amount: number }) {
+export async function addBudget(data: BudgetData) {
     try {
-        const user = await getAuthUser();
+        const supabase = await createClient();
+        const { data: { user } } = await supabase.auth.getUser();
         if (!user) return { success: false, error: "Unauthorized" };
 
-        await db.insert(budgets).values({
-            userId: user.id,
-            ...data,
-            amount: data.amount.toString(),
-        } as any);
+        const { error } = await supabase
+            .from("budgets")
+            .insert({
+                user_id: user.id,
+                category: data.category,
+                amount: data.amount,
+                period: data.period || "monthly",
+                color: data.color || "bg-blue-500",
+            });
+
+        if (error) throw error;
 
         revalidatePath("/budgets");
         revalidatePath("/");
@@ -50,15 +70,17 @@ export async function addBudget(data: Omit<NewBudget, "id" | "userId" | "created
 
 export async function deleteBudget(id: string) {
     try {
-        const user = await getAuthUser();
+        const supabase = await createClient();
+        const { data: { user } } = await supabase.auth.getUser();
         if (!user) return { success: false, error: "Unauthorized" };
 
-        await db.delete(budgets).where(
-            and(
-                eq(budgets.id, id),
-                eq(budgets.userId, user.id)
-            )
-        );
+        const { error } = await supabase
+            .from("budgets")
+            .delete()
+            .eq("id", id)
+            .eq("user_id", user.id);
+
+        if (error) throw error;
 
         revalidatePath("/budgets");
         revalidatePath("/");
@@ -72,38 +94,48 @@ export async function deleteBudget(id: string) {
 
 export async function getBudgetStats() {
     try {
-        const user = await getAuthUser();
+        const supabase = await createClient();
+        const { data: { user } } = await supabase.auth.getUser();
         if (!user) return { success: false, error: "Unauthorized" };
 
-        // Fetch specific fields separately to avoid ambiguous queries
-        const budgetData = await db.select().from(budgets).where(eq(budgets.userId, user.id));
-        const transactionData = await db
-            .select({
-                category: transactions.category,
-                amount: transactions.amount,
-                type: transactions.type
-            })
-            .from(transactions)
-            .where(eq(transactions.userId, user.id));
+        // Fetch budgets
+        const { data: budgetData, error: budgetError } = await supabase
+            .from("budgets")
+            .select("*")
+            .eq("user_id", user.id);
 
-        // Aggregate spending by category in memory
+        if (budgetError) throw budgetError;
+
+        // Fetch transactions for spending calculation
+        const { data: transactionData, error: txError } = await supabase
+            .from("transactions")
+            .select("category, amount, type")
+            .eq("user_id", user.id);
+
+        if (txError) throw txError;
+
+        // Aggregate spending by category
         const categoriesMap = new Map<string, number>();
-
-        transactionData.filter(t => t.type === 'expense').forEach(t => {
+        (transactionData || []).filter(t => t.type === 'expense').forEach(t => {
             const current = categoriesMap.get(t.category) || 0;
-            categoriesMap.set(t.category, current + Number(t.amount));
+            categoriesMap.set(t.category, current + Math.abs(Number(t.amount)));
         });
 
-        const budgetStats = budgetData.map(budget => {
+        const budgetStats = (budgetData || []).map(budget => {
             const spent = categoriesMap.get(budget.category) || 0;
             const amount = Number(budget.amount);
             return {
-                ...budget,
+                id: budget.id,
+                userId: budget.user_id,
+                category: budget.category,
                 amount: amount,
+                period: budget.period,
+                color: budget.color,
+                createdAt: budget.created_at,
                 spent,
                 total: amount,
                 remaining: amount - spent,
-                percentage: Math.min((spent / amount) * 100, 100)
+                percentage: amount > 0 ? Math.min((spent / amount) * 100, 100) : 0
             };
         });
 
@@ -113,3 +145,4 @@ export async function getBudgetStats() {
         return { success: false, error: "Failed to fetch budget stats" };
     }
 }
+
