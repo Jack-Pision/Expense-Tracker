@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/utils/supabase/server";
+import { createAdminClient } from "@/utils/supabase/admin";
 
 interface BudgetData {
     category: string;
@@ -16,7 +17,8 @@ export async function getBudgets() {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return { success: false, error: "Unauthorized" };
 
-        const { data, error } = await supabase
+        const admin = createAdminClient();
+        const { data, error } = await admin
             .from("budgets")
             .select("*")
             .eq("user_id", user.id);
@@ -46,7 +48,8 @@ export async function addBudget(data: BudgetData) {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return { success: false, error: "Unauthorized" };
 
-        const { error } = await supabase
+        const admin = createAdminClient();
+        const { error } = await admin
             .from("budgets")
             .insert({
                 user_id: user.id,
@@ -56,7 +59,10 @@ export async function addBudget(data: BudgetData) {
                 color: data.color || "bg-blue-500",
             });
 
-        if (error) throw error;
+        if (error) {
+            console.error("Supabase insert error:", error);
+            return { success: false, error: error.message };
+        }
 
         revalidatePath("/budgets");
         revalidatePath("/");
@@ -74,7 +80,8 @@ export async function deleteBudget(id: string) {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return { success: false, error: "Unauthorized" };
 
-        const { error } = await supabase
+        const admin = createAdminClient();
+        const { error } = await admin
             .from("budgets")
             .delete()
             .eq("id", id)
@@ -98,23 +105,22 @@ export async function getBudgetStats() {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return { success: false, error: "Unauthorized" };
 
-        // Fetch budgets
-        const { data: budgetData, error: budgetError } = await supabase
+        const admin = createAdminClient();
+
+        const { data: budgetData, error: budgetError } = await admin
             .from("budgets")
             .select("*")
             .eq("user_id", user.id);
 
         if (budgetError) throw budgetError;
 
-        // Fetch transactions for spending calculation
-        const { data: transactionData, error: txError } = await supabase
+        const { data: transactionData, error: txError } = await admin
             .from("transactions")
             .select("category, amount, type")
             .eq("user_id", user.id);
 
         if (txError) throw txError;
 
-        // Aggregate spending by category
         const categoriesMap = new Map<string, number>();
         (transactionData || []).filter(t => t.type === 'expense').forEach(t => {
             const current = categoriesMap.get(t.category) || 0;
@@ -145,4 +151,5 @@ export async function getBudgetStats() {
         return { success: false, error: "Failed to fetch budget stats" };
     }
 }
+
 

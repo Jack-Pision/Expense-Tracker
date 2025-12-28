@@ -17,7 +17,11 @@ NEXT_PUBLIC_SUPABASE_URL=https://xmsjzfskhkhckrftscy.supabase.co
 # 2. API Settings -> anon public key
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 
-# 3. Database Connection String
+# 3. API Settings -> service_role key (CRITICAL for server-side database operations)
+# This bypasses RLS - only use in server-side code!
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+
+# 4. Database Connection String (optional, for Drizzle migrations only)
 # Since your project ID is: xmsjzfskhkhckrftscy
 # COPY THIS EXACTLY (replace [YOUR-PASSWORD] with yours):
 DATABASE_URL=postgresql://postgres:[YOUR-PASSWORD]@db.xmsjzfskhkhckrftscy.supabase.co:5432/postgres

@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/utils/supabase/server";
+import { createAdminClient } from "@/utils/supabase/admin";
 
 // Transaction type for the app
 interface TransactionData {
@@ -14,11 +15,14 @@ interface TransactionData {
 
 export async function getTransactions() {
     try {
+        // Use regular client for auth check
         const supabase = await createClient();
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return { success: false, error: "Unauthorized" };
 
-        const { data, error } = await supabase
+        // Use admin client for data (bypasses RLS)
+        const admin = createAdminClient();
+        const { data, error } = await admin
             .from("transactions")
             .select("*")
             .eq("user_id", user.id)
@@ -26,7 +30,6 @@ export async function getTransactions() {
 
         if (error) throw error;
 
-        // Map to expected format
         const formattedData = (data || []).map(tx => ({
             id: tx.id,
             userId: tx.user_id,
@@ -51,7 +54,8 @@ export async function addTransaction(data: TransactionData) {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return { success: false, error: "Unauthorized" };
 
-        const { error } = await supabase
+        const admin = createAdminClient();
+        const { error } = await admin
             .from("transactions")
             .insert({
                 user_id: user.id,
@@ -62,7 +66,10 @@ export async function addTransaction(data: TransactionData) {
                 type: data.type,
             });
 
-        if (error) throw error;
+        if (error) {
+            console.error("Supabase insert error:", error);
+            return { success: false, error: error.message };
+        }
 
         revalidatePath("/transactions");
         revalidatePath("/");
@@ -81,7 +88,8 @@ export async function deleteTransaction(id: string) {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return { success: false, error: "Unauthorized" };
 
-        const { error } = await supabase
+        const admin = createAdminClient();
+        const { error } = await admin
             .from("transactions")
             .delete()
             .eq("id", id)
@@ -111,7 +119,8 @@ export async function editTransaction(id: string, data: Partial<TransactionData>
         if (data.category !== undefined) updateData.category = data.category;
         if (data.type !== undefined) updateData.type = data.type;
 
-        const { error } = await supabase
+        const admin = createAdminClient();
+        const { error } = await admin
             .from("transactions")
             .update(updateData)
             .eq("id", id)
@@ -134,7 +143,8 @@ export async function getBalanceStats() {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return { success: false, error: "Unauthorized" };
 
-        const { data, error } = await supabase
+        const admin = createAdminClient();
+        const { data, error } = await admin
             .from("transactions")
             .select("amount, type")
             .eq("user_id", user.id);
@@ -162,4 +172,5 @@ export async function getBalanceStats() {
         return { success: false, error: "Failed to fetch stats" };
     }
 }
+
 
