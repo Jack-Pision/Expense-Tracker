@@ -110,9 +110,11 @@ export function AddTransactionModal({ isOpen, onClose, onSubmit, initialData }: 
     };
 
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
     const handleSubmit = async () => {
         setIsSubmitting(true);
+        setError(null);
         try {
             let result;
             if (initialData?.id) {
@@ -124,13 +126,19 @@ export function AddTransactionModal({ isOpen, onClose, onSubmit, initialData }: 
                 const amountVal = formData.type === "expense" ? -Math.abs(formData.amount) : Math.abs(formData.amount);
 
                 result = await editTransaction(initialData.id, {
-                    ...formData,
+                    description: formData.description,
+                    category: formData.category,
+                    date: formData.date,
+                    type: formData.type,
                     amount: amountVal,
                 });
             } else {
                 // Create new transaction
                 result = await addTransaction({
-                    ...formData,
+                    description: formData.description,
+                    category: formData.category,
+                    date: formData.date,
+                    type: formData.type,
                     amount: formData.type === "expense" ? -Math.abs(formData.amount) : Math.abs(formData.amount),
                 });
             }
@@ -141,11 +149,11 @@ export function AddTransactionModal({ isOpen, onClose, onSubmit, initialData }: 
                 }
                 resetAndClose();
             } else {
-                console.error(result.error);
-                // In a real app, show error toast
+                setError(result.error || "Failed to save transaction");
             }
         } catch (error) {
             console.error(error);
+            setError("An unexpected error occurred");
         } finally {
             setIsSubmitting(false);
         }
@@ -364,6 +372,13 @@ export function AddTransactionModal({ isOpen, onClose, onSubmit, initialData }: 
                                                 Add receipt photo (optional)
                                             </p>
                                         </div>
+
+                                        {/* Error Display */}
+                                        {error && (
+                                            <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
+                                                {error}
+                                            </div>
+                                        )}
 
                                         <div className="flex gap-3 pt-2">
                                             <Button

@@ -40,18 +40,24 @@ export async function addTransaction(data: Omit<NewTransaction, "id" | "userId" 
         const user = await getAuthUser();
         if (!user) return { success: false, error: "Unauthorized" };
 
-        await db.insert(transactions).values({
+        // Only include fields that exist in the schema
+        const transactionData = {
             userId: user.id,
-            ...data,
-            amount: data.amount.toString(), // numeric requires string in some drivers
-        } as any);
+            description: data.description,
+            amount: data.amount.toString(),
+            date: data.date,
+            category: data.category,
+            type: data.type,
+        };
+
+        const result = await db.insert(transactions).values(transactionData);
 
         revalidatePath("/transactions");
         revalidatePath("/");
         return { success: true };
     } catch (error) {
         console.error("Failed to add transaction:", error);
-        return { success: false, error: "Failed to add transaction" };
+        return { success: false, error: error instanceof Error ? error.message : "Failed to add transaction" };
     }
 }
 
@@ -81,8 +87,12 @@ export async function editTransaction(id: string, data: Partial<Omit<NewTransact
         const user = await getAuthUser();
         if (!user) return { success: false, error: "Unauthorized" };
 
-        const updateData: any = { ...data };
-        if (data.amount) updateData.amount = data.amount.toString();
+        const updateData: any = {};
+        if (data.description !== undefined) updateData.description = data.description;
+        if (data.amount !== undefined) updateData.amount = data.amount.toString();
+        if (data.date !== undefined) updateData.date = data.date;
+        if (data.category !== undefined) updateData.category = data.category;
+        if (data.type !== undefined) updateData.type = data.type;
 
         await db.update(transactions)
             .set(updateData)
@@ -98,7 +108,7 @@ export async function editTransaction(id: string, data: Partial<Omit<NewTransact
         return { success: true };
     } catch (error) {
         console.error("Failed to edit transaction:", error);
-        return { success: false, error: "Failed to edit transaction" };
+        return { success: false, error: error instanceof Error ? error.message : "Failed to edit transaction" };
     }
 }
 
