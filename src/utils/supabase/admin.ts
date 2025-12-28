@@ -1,5 +1,3 @@
-"use server";
-
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 
 // Admin client with service role - bypasses RLS
@@ -16,3 +14,4 @@ export function createAdminClient() {
         }
     );
 }
+
