@@ -40,24 +40,33 @@ export async function addTransaction(data: Omit<NewTransaction, "id" | "userId" 
         const user = await getAuthUser();
         if (!user) return { success: false, error: "Unauthorized" };
 
-        // Only include fields that exist in the schema
+        console.log("Adding transaction for user:", user.id, "Data:", data);
+
         const transactionData = {
             userId: user.id,
             description: data.description,
-            amount: data.amount.toString(),
+            amount: data.amount.toString(), // numeric field expects string in Postgres/Drizzle
             date: data.date,
             category: data.category,
             type: data.type,
         };
 
-        const result = await db.insert(transactions).values(transactionData);
+        await db.insert(transactions).values(transactionData);
 
         revalidatePath("/transactions");
         revalidatePath("/");
+        revalidatePath("/analytics");
         return { success: true };
     } catch (error) {
         console.error("Failed to add transaction:", error);
-        return { success: false, error: error instanceof Error ? error.message : "Failed to add transaction" };
+        // Providing more descriptive error for RLS issues
+        const errorMsg = error instanceof Error ? error.message : "Failed to add transaction";
+        return {
+            success: false,
+            error: errorMsg.includes("policy") || errorMsg.includes("permission")
+                ? "Database Permission Error: Please check RLS policies in Supabase."
+                : errorMsg
+        };
     }
 }
 

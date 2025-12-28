@@ -52,3 +52,43 @@ To allow users to login immediately without clicking an email link:
 6.  Click **Save**.
 
 Once this is disabled, new clean signups will be logged in instantly!
+
+### 7. Configure RLS Policies (CRITICAL)
+If you see "Failed query" or transactions don't save, you likely have **Row Level Security (RLS)** enabled but no policies. 
+
+**Run this in the Supabase SQL Editor:**
+
+```sql
+-- 1. Enable RLS on your tables
+ALTER TABLE transactions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE budgets ENABLE ROW LEVEL SECURITY;
+
+-- 2. Create INSERT policy for transactions
+CREATE POLICY "Allow individual insert" ON transactions
+FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+-- 3. Create SELECT policy for transactions
+CREATE POLICY "Allow individual select" ON transactions
+FOR SELECT USING (auth.uid() = user_id);
+
+-- 4. Create UPDATE policy for transactions
+CREATE POLICY "Allow individual update" ON transactions
+FOR UPDATE USING (auth.uid() = user_id);
+
+-- 5. Create DELETE policy for transactions
+CREATE POLICY "Allow individual delete" ON transactions
+FOR DELETE USING (auth.uid() = user_id);
+
+-- Repeat for budgets table
+CREATE POLICY "Allow individual insert" ON budgets
+FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Allow individual select" ON budgets
+FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Allow individual update" ON budgets
+FOR UPDATE USING (auth.uid() = user_id);
+CREATE POLICY "Allow individual delete" ON budgets
+FOR DELETE USING (auth.uid() = user_id);
+```
+
+> [!TIP]
+> Alternatively, you can temporarily **Disable RLS** for both tables in the Supabase Dashboard -> Table Editor -> Table Settings to verify if that resolves the issue!
