@@ -370,6 +370,7 @@ export function AddTransactionModal({ isOpen, onClose, onSubmit, initialData }: 
                                                 variant="secondary"
                                                 onClick={() => setStep(2)}
                                                 className="flex-1"
+                                                disabled={isSubmitting}
                                             >
                                                 Back
                                             </Button>
@@ -377,8 +378,10 @@ export function AddTransactionModal({ isOpen, onClose, onSubmit, initialData }: 
                                                 onClick={handleSubmit}
                                                 className="flex-1"
                                                 leftIcon={<Check className="h-4 w-4" />}
+                                                isLoading={isSubmitting}
+                                                disabled={isSubmitting}
                                             >
-                                                Save
+                                                {isSubmitting ? "Saving..." : "Save"}
                                             </Button>
                                         </div>
                                     </motion.div>
