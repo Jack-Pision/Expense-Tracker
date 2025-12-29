@@ -57,42 +57,49 @@ To allow users to login immediately without clicking an email link:
 
 Once this is disabled, new clean signups will be logged in instantly!
 
-### 7. Configure RLS Policies (CRITICAL)
-If you see "Failed query" or transactions don't save, you likely have **Row Level Security (RLS)** enabled but no policies. 
+### 7. Initialize Database (FINAL FIX)
+If you see "Could not find the table" or "Failed query", your database tables haven't been created yet.
 
-**Run this in the Supabase SQL Editor:**
+**Run this FULL script in the Supabase SQL Editor:**
 
 ```sql
--- 1. Enable RLS on your tables
+-- 1. Create Tables
+CREATE TABLE IF NOT EXISTS "budgets" (
+        "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+        "user_id" uuid NOT NULL,
+        "category" text NOT NULL,
+        "amount" numeric(12, 2) NOT NULL,
+        "period" text DEFAULT 'monthly',
+        "color" text DEFAULT 'bg-blue-500',
+        "created_at" timestamp DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS "transactions" (
+        "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+        "user_id" uuid NOT NULL,
+        "description" text NOT NULL,
+        "amount" numeric(12, 2) NOT NULL,
+        "date" text NOT NULL,
+        "category" text NOT NULL,
+        "type" text NOT NULL,
+        "created_at" timestamp DEFAULT now()
+);
+
+-- 2. Enable RLS
 ALTER TABLE transactions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE budgets ENABLE ROW LEVEL SECURITY;
 
--- 2. Create INSERT policy for transactions
-CREATE POLICY "Allow individual insert" ON transactions
-FOR INSERT WITH CHECK (auth.uid() = user_id);
+-- 3. Create Policies
+CREATE POLICY "Allow individual insert" ON transactions FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Allow individual select" ON transactions FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Allow individual update" ON transactions FOR UPDATE USING (auth.uid() = user_id);
+CREATE POLICY "Allow individual delete" ON transactions FOR DELETE USING (auth.uid() = user_id);
 
--- 3. Create SELECT policy for transactions
-CREATE POLICY "Allow individual select" ON transactions
-FOR SELECT USING (auth.uid() = user_id);
-
--- 4. Create UPDATE policy for transactions
-CREATE POLICY "Allow individual update" ON transactions
-FOR UPDATE USING (auth.uid() = user_id);
-
--- 5. Create DELETE policy for transactions
-CREATE POLICY "Allow individual delete" ON transactions
-FOR DELETE USING (auth.uid() = user_id);
-
--- Repeat for budgets table
-CREATE POLICY "Allow individual insert" ON budgets
-FOR INSERT WITH CHECK (auth.uid() = user_id);
-CREATE POLICY "Allow individual select" ON budgets
-FOR SELECT USING (auth.uid() = user_id);
-CREATE POLICY "Allow individual update" ON budgets
-FOR UPDATE USING (auth.uid() = user_id);
-CREATE POLICY "Allow individual delete" ON budgets
-FOR DELETE USING (auth.uid() = user_id);
+CREATE POLICY "Allow individual insert" ON budgets FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Allow individual select" ON budgets FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Allow individual update" ON budgets FOR UPDATE USING (auth.uid() = user_id);
+CREATE POLICY "Allow individual delete" ON budgets FOR DELETE USING (auth.uid() = user_id);
 ```
 
-> [!TIP]
-> Alternatively, you can temporarily **Disable RLS** for both tables in the Supabase Dashboard -> Table Editor -> Table Settings to verify if that resolves the issue!
+> [!NOTE]
+> After running this, if it still fails, click the **"Reload Schema"** button in **Table Editor** settings to refresh the cache!
