@@ -12,6 +12,14 @@ interface BudgetData {
 }
 
 export async function getBudgets() {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+    if (!supabaseUrl || !supabaseAnonKey) {
+        // Return mock data when Supabase is not configured
+        return { success: true, data: [] };
+    }
+
     try {
         const supabase = await createClient();
         const { data: { user } } = await supabase.auth.getUser();
@@ -100,6 +108,14 @@ export async function deleteBudget(id: string) {
 }
 
 export async function getBudgetStats() {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+    if (!supabaseUrl || !supabaseAnonKey) {
+        // Return mock data when Supabase is not configured
+        return { success: true, data: [] };
+    }
+
     try {
         const supabase = await createClient();
         const { data: { user } } = await supabase.auth.getUser();

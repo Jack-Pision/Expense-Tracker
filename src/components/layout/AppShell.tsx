@@ -69,7 +69,7 @@ export function AppShell({ children }: AppShellProps) {
 
     return (
         <ModalContext.Provider value={modalContext}>
-            <div className="min-h-screen bg-background">
+            <div className="h-screen bg-background overflow-hidden">
                 {/* Desktop Sidebar */}
                 <aside className="hidden lg:fixed lg:inset-y-0 lg:left-0 lg:z-50 lg:block lg:w-72 lg:bg-surface lg:border-r lg:border-border">
                     <div className="flex h-20 shrink-0 items-center gap-3 px-6 border-b border-border">
@@ -223,7 +223,7 @@ export function AppShell({ children }: AppShellProps) {
                 </nav>
 
                 {/* Main Content */}
-                <main className="lg:pl-72 pt-16 lg:pt-0 pb-20 lg:pb-0 min-h-screen bg-background">
+                <main className="lg:pl-72 pt-16 lg:pt-0 pb-20 lg:pb-0 h-full overflow-y-auto bg-background">
                     <div className="container-wrapper py-8">{children}</div>
                 </main>
 

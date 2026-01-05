@@ -14,6 +14,14 @@ interface TransactionData {
 }
 
 export async function getTransactions() {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+    if (!supabaseUrl || !supabaseAnonKey) {
+        // Return mock data when Supabase is not configured
+        return { success: true, data: [] };
+    }
+
     try {
         // Use regular client for auth check
         const supabase = await createClient();
@@ -138,6 +146,21 @@ export async function editTransaction(id: string, data: Partial<TransactionData>
 }
 
 export async function getBalanceStats() {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+    if (!supabaseUrl || !supabaseAnonKey) {
+        // Return mock stats when Supabase is not configured
+        return {
+            success: true,
+            data: {
+                totalBalance: 0,
+                totalIncome: 0,
+                totalExpenses: 0,
+            },
+        };
+    }
+
     try {
         const supabase = await createClient();
         const { data: { user } } = await supabase.auth.getUser();
